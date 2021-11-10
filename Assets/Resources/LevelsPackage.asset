@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -18,4 +19,6 @@ MonoBehaviour:
     levelName: I was here
   - scene: {fileID: 102900000, guid: df8c8bab4eb904b10928751e682dd324, type: 3}
     levelName: Leap of Faith
+  - scene: {fileID: 102900000, guid: 0a5af0c32197b474d9bc2ed54f37f7f1, type: 3}
+    levelName: My Level
   hasChanges: 0
