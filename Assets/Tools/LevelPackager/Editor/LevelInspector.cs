@@ -18,6 +18,8 @@ namespace RunAndJump.LevelCreator
             Paint,
             Edit,
             Erase,
+            Clear,
+            FillRect,
         }
 
         private Mode _selectedMode;
@@ -26,6 +28,8 @@ namespace RunAndJump.LevelCreator
         private PaletteItem _itemSelected;
         private Texture2D _itemPreview;
         private LevelPiece _pieceSelected;
+
+        private PaletteItem _itemInspected;
 
         private Level _myTarget;
 
@@ -38,6 +42,12 @@ namespace RunAndJump.LevelCreator
         private int _originalPosX;
         private int _originalPosY;
 
+        private GUIStyle _titleStyle;
+
+        Vector2 startPos = Vector2.zero;
+        bool dragBox = false;
+
+
         #endregion
 
         #region Events
@@ -49,7 +59,7 @@ namespace RunAndJump.LevelCreator
             InitLevel();
             ResetResizeValues();
             SubscribeEvents();
-
+            InitStyles();
         }
 
         private void OnDisable()
@@ -106,6 +116,11 @@ namespace RunAndJump.LevelCreator
                 case Mode.Erase:
                     Tools.current = Tool.None;
                     break;
+                case Mode.Clear:
+                    break;
+                case Mode.FillRect:
+                    Tools.current = Tool.None;
+                    break;
                 case Mode.View:
                 default:
                     Tools.current = Tool.View;
@@ -132,6 +147,7 @@ namespace RunAndJump.LevelCreator
 
             mousePosition = new Vector2(mousePosition.x, camera.pixelHeight - mousePosition.y);
 
+            
             //Debug.LogFormat("MousePos: {0}", mousePosition);
             Vector3 worldPos = camera.ScreenToWorldPoint(mousePosition);
             Vector3 gridPos = _myTarget.WorldToGridCoordinates(worldPos);
@@ -142,28 +158,79 @@ namespace RunAndJump.LevelCreator
             {
                 case Mode.Paint:
                     if (Event.current.type == EventType.MouseDown || Event.current.type == EventType.MouseDrag)
-                    {
                         Paint(col, row);
-                    }
+
                     break;
                 case Mode.Edit:
                     if (Event.current.type == EventType.MouseDown)
                     {
                         Edit(col, row);
                         _originalPosX = col;
+
                         _originalPosY = row;
+
                     }
+
                     if (Event.current.type == EventType.MouseUp || Event.current.type == EventType.Ignore)
                     {
+
                         if (_itemInspected != null)
-                        {
                             Move();
-                        }
-                        if (_itemInspected != null)
-                        {
-                            _itemInspected.transform.position = Handles.FreeMoveHandle(_itemInspected.transform.position, _itemInspected.transform.rotation, Level.GridSize / 2, Level.GridSize / 2 * Vector3.one, Handles.RectangleCap);
-                        }
+
                     }
+
+
+
+                    if (_itemInspected != null)
+                    {
+
+                        _itemInspected.transform.position = Handles.FreeMoveHandle(
+
+                            _itemInspected.transform.position,
+
+                            _itemInspected.transform.rotation,
+
+                            Level.GridSize / 2,
+
+                            Level.GridSize / 2 * Vector3.one,
+
+                            Handles.RectangleHandleCap);
+
+                    }
+
+                    break;
+                case Mode.Clear:
+                    Clear();
+                    break;
+                case Mode.FillRect:
+                    if (Event.current.type == EventType.MouseDown || Event.current.type == EventType.MouseDrag)
+                    {
+                        if (!dragBox)
+                        {
+                            dragBox = true;
+                            startPos = Event.current.mousePosition;
+                            startPos = new Vector2(startPos.x, camera.pixelHeight - startPos.y);
+                            startPos = _myTarget.WorldToGridCoordinates(camera.ScreenToWorldPoint(startPos));
+                        }
+
+                    }
+
+                    if (Event.current.type == EventType.MouseUp)
+                    {
+                        dragBox = false;
+                        #region Debug Log Format Testing
+                        //Debug.LogFormat("Box pos: {0}",boxRect.position.ToString());
+                        //Debug.LogFormat("World pos: {0}",worldPos.ToString());
+                        //Debug.LogFormat("start pos: {0}",startPos.ToString());
+
+                        //Debug.LogFormat("Grid pos: {0}", gridPos.ToString());
+                        //Debug.LogFormat("Width: {0}, Height: {1}", boxRect.width.ToString(), boxRect.height.ToString());
+                        #endregion
+
+                        FillRect(startPos, col, row);
+                        
+                    }
+
                     break;
                 case Mode.Erase:
                     if (Event.current.type == EventType.MouseDown || Event.current.type == EventType.MouseDrag)
@@ -176,7 +243,7 @@ namespace RunAndJump.LevelCreator
                     break;
             }
 
-            Debug.LogFormat("GridPos {0}, {1}", col, row);
+          //  Debug.LogFormat("GridPos {0}, {1}", col, row); 
         }
 
         #endregion
@@ -204,11 +271,82 @@ namespace RunAndJump.LevelCreator
             obj.hideFlags = HideFlags.HideInHierarchy;
             _myTarget.Pieces[col + row * _myTarget.TotalColumns] = obj.GetComponent<LevelPiece>();
         }
+
+        private void FillRect(Vector3 startPos, int col, int row)
+        {
+            //Check out of bounds and if we have a piece selected
+            if (!_myTarget.IsInsideGridBounds(col, row) || _pieceSelected == null)
+            {
+                return;
+            }
+
+           //  Debug.LogFormat("GridPos {0}, {1}", col, row);
+           // Debug.LogFormat("start pos: {0}",startPos.ToString());
+
+
+            // Probably the worst implementation of a fill tool but it works :D
+            if (startPos.x <= col && startPos.y <= row)
+            {
+                // if you drag from bottom left to top right
+                for (int i = (int)startPos.x; i <= col; i++)
+                {
+                    for (int j = (int)startPos.y; j <= row; j++)
+                    {
+
+                        Paint(i, j);
+                    }
+
+                }
+            } else if(startPos.x >= col && startPos.y <= row)
+            {
+                // if you drag from bottom right to top left
+                for (int i = (int)startPos.x; i >= col; --i)
+                {
+                    for (int j = (int)startPos.y; j <= row; j++)
+                    {
+
+                        Paint(i, j);
+                    }
+
+                }
+            }
+            else if (startPos.x >= col && startPos.y >= row)
+            {
+
+                // if you drag from top right to bottom left
+                for (int i = (int)startPos.x; i >= col; --i)
+                {
+                    for (int j = (int)startPos.y; j >= row; --j)
+                    {
+
+                        Paint(i, j);
+                    }
+
+                }
+            }
+            else if (startPos.x <= col && startPos.y >= row)
+            {
+                // if you drag from top left to bottom right
+                for (int i = (int)startPos.x; i <= col; i++)
+                {
+                    for (int j = (int)startPos.y; j >= row; --j)
+                    {
+
+                        Paint(i, j);
+                    }
+
+                }
+            }
+
+
+        }
+
+
         private void Erase(int col, int row)
         {
-            //Debug.LogFormat("Erasing {0},{1}", col, row);
+            //Debug.LogFormat("Erasing {0},{1}", col, row);  
 
-            //Check out of bounds
+            //Check out of bounds 
             if (!_myTarget.IsInsideGridBounds(col, row))
             {
                 return;
@@ -219,34 +357,65 @@ namespace RunAndJump.LevelCreator
                 DestroyImmediate(_myTarget.Pieces[col + row * _myTarget.TotalColumns].gameObject);
             }
         }
-        private PaletteItem _itemInspected;
+
+        private void Clear()
+        {
+            if(EditorUtility.DisplayDialog("Clear whole level?",
+                "Are you sure you want to clear the whole level?"
+                , "Clear", "Do not clear"))
+            {
+                for (int i = 0; i < _myTarget.Pieces.Length; i++)
+                {
+                    if (_myTarget.Pieces[i] != null)
+                        DestroyImmediate(_myTarget.Pieces[i].gameObject);
+                }
+                _currentMode = Mode.View;
+            }
+            else
+            _currentMode = Mode.View;
+        }
+
+
         private void Edit(int col, int row)
         {
-            //Debug.LogFormat("Editing {0},{1}", col, row);
 
-            //Check out of bounds
-            if (_myTarget.Pieces[col + row * _myTarget.TotalColumns] != null)
+            // Check out of bounds 
+
+            if (!_myTarget.IsInsideGridBounds(col, row) || _myTarget.Pieces[col + row * _myTarget.TotalColumns] == null)
             {
+
                 _itemInspected = null;
+
             }
             else
             {
+
                 _itemInspected = _myTarget.Pieces[col + row * _myTarget.TotalColumns].GetComponent<PaletteItem>() as PaletteItem;
+
             }
+
             Repaint();
+
         }
 
         private void Move()
         {
+
             Vector3 gridPoint = _myTarget.WorldToGridCoordinates(_itemInspected.transform.position);
+
             int col = (int)gridPoint.x;
+
             int row = (int)gridPoint.y;
 
             if (col == _originalPosX && row == _originalPosY)
             {
+
                 return;
+
             }
-            if (_myTarget.IsInsideGridBounds(col, row) || _myTarget.Pieces[col + row * _myTarget.TotalColumns] != null)
+
+            if (!_myTarget.IsInsideGridBounds(col, row) ||
+            _myTarget.Pieces[col + row * _myTarget.TotalColumns] != null)
             {
                 _itemInspected.transform.position = _myTarget.GridToWorldCoordinates(_originalPosX, _originalPosY);
             }
@@ -256,6 +425,7 @@ namespace RunAndJump.LevelCreator
                 _myTarget.Pieces[col + row * _myTarget.TotalColumns] = _itemInspected.GetComponent<LevelPiece>();
                 _myTarget.Pieces[col + row * _myTarget.TotalColumns].transform.position = _myTarget.GridToWorldCoordinates(col, row);
             }
+
         }
 
         #endregion
@@ -264,26 +434,36 @@ namespace RunAndJump.LevelCreator
 
         private void DrawInspectedItemGUI()
         {
-            //Only show this GUI if we are in edit mode.
+            // Only show this GUI if we are in edit mode.
+
             if (_currentMode != Mode.Edit)
             {
-                return;
-            }
 
-            //EditorGUILayout.LaberlField("Piece Edited", _titleStyle
-            EditorGUILayout.LabelField("Piece Edited", EditorStyles.boldLabel);
+                return;
+
+            }
+            EditorGUILayout.LabelField("Piece Edited", _titleStyle);
+
 
             if (_itemInspected != null)
             {
+
                 EditorGUILayout.BeginVertical("box");
+
                 EditorGUILayout.LabelField("Name: " + _itemInspected.name);
-                Editor.CreateEditor(_itemInspected.inspectedScript).OnInspectorGUI();
+
+                Editor.CreateEditor(
+                _itemInspected.inspectedScript).OnInspectorGUI();
                 EditorGUILayout.EndVertical();
+
             }
             else
             {
-                EditorGUILayout.HelpBox("No piece to edit!", MessageType.Info);
+
+                EditorGUILayout.HelpBox("No piece to edit!",
+                MessageType.Info);
             }
+
         }
 
         public override void OnInspectorGUI()
@@ -300,21 +480,44 @@ namespace RunAndJump.LevelCreator
             }
         }
 
+        private void InitStyles()
+        {
+            GUISkin skin = (GUISkin)Resources.Load("LevelCreatorSkin");
+            _titleStyle = skin.label;
+
+        }
+
         private void DrawLevelDataGUI()
         {
-            EditorGUILayout.LabelField("Data", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Data", _titleStyle);
+
             EditorGUILayout.BeginVertical("box");
-            //_myTarget.TotalTime = EditorGUILayout.IntField("Total Time", Mathf.Max(0, _myTarget.TotalTime));
+
             EditorGUILayout.PropertyField(_serializedTotalTime);
-            _myTarget.Gravity = EditorGUILayout.FloatField("Gravity", _myTarget.Gravity);
-            _myTarget.Bgm = (AudioClip)EditorGUILayout.ObjectField("Bgm", _myTarget.Bgm, typeof(AudioClip), false);
-            _myTarget.Background = (Sprite)EditorGUILayout.ObjectField("Background", _myTarget.Background, typeof(Sprite), false);
+
+            _myTarget.Settings = (LevelSettings)EditorGUILayout.ObjectField("Level Settings", _myTarget.Settings, typeof(LevelSettings), false);
+
+            if (_myTarget.Settings != null)
+            {
+
+                Editor.CreateEditor(_myTarget.Settings).OnInspectorGUI();
+
+            }
+            else
+            {
+
+                EditorGUILayout.HelpBox("You must attach a LevelSettingsasset!", MessageType.Warning);
+    
+      }
+
             EditorGUILayout.EndVertical();
+
+            _myTarget.SetGravity();
         }
 
         private void DrawLevelSizeGUI()
         {
-            EditorGUILayout.LabelField("Size", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Size", _titleStyle);
             EditorGUILayout.BeginHorizontal("box");
             EditorGUILayout.BeginVertical();
             _newTotalColumns = EditorGUILayout.IntField("Columns", Mathf.Max(1, _newTotalColumns));
@@ -346,10 +549,10 @@ namespace RunAndJump.LevelCreator
 
         private void DrawPieceSelectedGUI()
         {
-            EditorGUILayout.LabelField("Piece Selected", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Piece Selected", _titleStyle);
             if (_pieceSelected == null)
             {
-                EditorGUILayout.HelpBox("No piec selected!", MessageType.Info);
+                EditorGUILayout.HelpBox("No piece selected!", MessageType.Info);
             }
             else
             {

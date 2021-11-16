@@ -23,6 +23,8 @@ namespace RunAndJump.LevelCreator
         public delegate void itemSelectedDelegate(PaletteItem item, Texture2D preview);
         public static event itemSelectedDelegate ItemSelectedEvent;
 
+        private GUIStyle _tabStyle;
+
         public static void ShowPalette()
         {
             instance = (PaletteWindow)EditorWindow.GetWindow(typeof(PaletteWindow));
@@ -40,6 +42,7 @@ namespace RunAndJump.LevelCreator
             {
                 InitContent();
             }
+            InitStyles();
         }
 
         private void InitCategories()
@@ -52,6 +55,46 @@ namespace RunAndJump.LevelCreator
                 _categoryLabels.Add(category.ToString());
             }
         }
+
+        private void InitStyles()
+        {
+            _tabStyle = new GUIStyle();
+            _tabStyle.alignment = TextAnchor.MiddleCenter;
+
+            _tabStyle.fontSize = 16;
+
+            Texture2D tabNormal = (Texture2D)
+             Resources.Load("Tab_Normal");
+
+            Texture2D tabSelected = (Texture2D)
+
+              Resources.Load("Tab_Selected");
+
+            Font tabFont = (Font)Resources.Load("Oswald-Regular");
+
+            _tabStyle.font = tabFont;
+
+            _tabStyle.fixedHeight = 40;
+
+            _tabStyle.normal.background = tabNormal;
+
+            _tabStyle.normal.textColor = Color.grey;
+
+
+
+            _tabStyle.onNormal.background = tabSelected;
+
+            _tabStyle.onNormal.textColor = Color.black;
+
+
+
+            _tabStyle.onFocused.background = tabSelected;
+
+            _tabStyle.onFocused.textColor = Color.black;
+
+            _tabStyle.border = new RectOffset(18, 18, 20, 4);
+        }
+
         private void InitContent()
         {
             Debug.Log("InitContet called...");
@@ -115,7 +158,11 @@ namespace RunAndJump.LevelCreator
         private void DrawTabs()
         {
             int index = (int)_categorySelected;
-            index = GUILayout.Toolbar(index, _categoryLabels.ToArray());
+
+            EditorGUILayout.Space();
+
+            index = GUILayout.Toolbar(index, _categoryLabels.ToArray(), _tabStyle);
+
             _categorySelected = _categories[index];
         }
 

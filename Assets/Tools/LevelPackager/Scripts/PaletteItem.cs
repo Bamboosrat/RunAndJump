@@ -14,10 +14,10 @@ namespace RunAndJump.LevelCreator
             Collectables,
             Enemies,
             Blocks,
+            
         }
         public Category category = Category.Misc;
         public string itemName = " ";
-        //public Object ispectedScript;
         public Object inspectedScript;
 #endif
     }
