@@ -17,6 +17,7 @@ namespace RunAndJump {
 		[SerializeField]
 		private int _totalRows = 10;
 
+
 		[SerializeField]
 		private LevelSettings _settings;
 		public LevelSettings Settings
@@ -124,6 +125,7 @@ namespace RunAndJump {
 
 
 
+
         private void OnDrawGizmos()
         {
 			Color oldColor = Gizmos.color;
@@ -148,6 +150,7 @@ namespace RunAndJump {
 
 			Gizmos.color = oldColor;
 		}
+
 
 
 		public Vector3 WorldToGridCoordinates(Vector3 point)
@@ -182,6 +185,7 @@ namespace RunAndJump {
         {
 			return (col >= 0 && col < _totalColumns && row >= 0 && row < _totalRows);
         }
-        #endregion
-    }
+		#endregion
+
+	}
 }

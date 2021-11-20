@@ -47,7 +47,7 @@ namespace RunAndJump.LevelCreator
 
         private void InitCategories()
         {
-            Debug.Log("InitCategories called...");
+           // Debug.Log("InitCategories called...");
             _categories = EditorUtils.GetListFromEnum<PaletteItem.Category>();
             _categoryLabels = new List<string>();
             foreach (PaletteItem.Category category in _categories)
@@ -199,11 +199,11 @@ namespace RunAndJump.LevelCreator
 
         private void OnDisable()
         {
-            Debug.Log("OnDisable called...");
+            //Debug.Log("OnDisable called...");
         }
         private void OnDestroy()
         {
-            Debug.Log("OnDestroy called...");
+           // Debug.Log("OnDestroy called...");
         }
         private void OnGUI()
         {

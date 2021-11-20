@@ -79,7 +79,7 @@ namespace RunAndJump.LevelCreator
 
         private void OnDestroy()
         {
-            Debug.Log("OnDestroy was called...");
+           // Debug.Log("OnDestroy was called...");
         }
 
         private void DrawModeGUI()
@@ -211,6 +211,7 @@ namespace RunAndJump.LevelCreator
                             startPos = Event.current.mousePosition;
                             startPos = new Vector2(startPos.x, camera.pixelHeight - startPos.y);
                             startPos = _myTarget.WorldToGridCoordinates(camera.ScreenToWorldPoint(startPos));
+
                         }
 
                     }
@@ -221,9 +222,9 @@ namespace RunAndJump.LevelCreator
                         #region Debug Log Format Testing
                         //Debug.LogFormat("Box pos: {0}",boxRect.position.ToString());
                         //Debug.LogFormat("World pos: {0}",worldPos.ToString());
-                        //Debug.LogFormat("start pos: {0}",startPos.ToString());
+                      //  Debug.LogFormat("start pos: {0}",startPos.ToString());
 
-                        //Debug.LogFormat("Grid pos: {0}", gridPos.ToString());
+                       // Debug.LogFormat("Grid pos: {0}", gridPos.ToString());
                         //Debug.LogFormat("Width: {0}, Height: {1}", boxRect.width.ToString(), boxRect.height.ToString());
                         #endregion
 
@@ -245,7 +246,7 @@ namespace RunAndJump.LevelCreator
 
           //  Debug.LogFormat("GridPos {0}, {1}", col, row); 
         }
-
+       
         #endregion
 
         #region Tools
@@ -414,8 +415,7 @@ namespace RunAndJump.LevelCreator
 
             }
 
-            if (!_myTarget.IsInsideGridBounds(col, row) ||
-            _myTarget.Pieces[col + row * _myTarget.TotalColumns] != null)
+            if (!_myTarget.IsInsideGridBounds(col, row) || _myTarget.Pieces[col + row * _myTarget.TotalColumns] != null)
             {
                 _itemInspected.transform.position = _myTarget.GridToWorldCoordinates(_originalPosX, _originalPosY);
             }
@@ -452,16 +452,14 @@ namespace RunAndJump.LevelCreator
 
                 EditorGUILayout.LabelField("Name: " + _itemInspected.name);
 
-                Editor.CreateEditor(
-                _itemInspected.inspectedScript).OnInspectorGUI();
+                Editor.CreateEditor(_itemInspected.inspectedScript).OnInspectorGUI();
                 EditorGUILayout.EndVertical();
 
             }
             else
             {
 
-                EditorGUILayout.HelpBox("No piece to edit!",
-                MessageType.Info);
+                EditorGUILayout.HelpBox("No piece to edit!", MessageType.Info);
             }
 
         }
